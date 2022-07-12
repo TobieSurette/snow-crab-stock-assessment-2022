@@ -1,0 +1,42 @@
+library(gulf.data)
+library(gulf.graphics)
+library(TMB)
+source("U:/TMB/TMB utilities.R")
+
+setwd("C:/Users/SuretteTJ/Desktop/github/snow-crab-stock-assessment-2022/R/population model")
+clc(); compile("maturation.cpp")
+dyn.load(dynlib("maturation"))
+
+# Define model data:
+data <- list(x = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,
+                   42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,
+                   80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,
+                   113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,
+                   142,143,144),
+             f = c(0,0,0,0,0,0,0,1,3,16,15,11,46,97,78,46,20,41,114,143,207,133,100,74,82,144,184,291,288,272,159,124,93,71,90,113,127,135,
+                   133,137,158,126,115,105,90,94,105,107,112,136,127,145,146,132,121,136,123,102,111,121,120,118,106,125,130,121,95,119,122,
+                   94,106,130,99,94,96,120,107,110,117,104,99,117,102,108,76,91,89,93,85,71,67,76,75,74,47,56,54,45,31,30,23,30,11,16,13,11,
+                   8,5,3,6,1,1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0))
+
+# Initialize parameters:
+parameters <- list(xp_skip = 70,                    # Skip-moulting pivot point parameter.
+                   log_window_skip = -1.6,          # Skip-moulting transition window parameter.
+                   logit_p_max_skip = 0,            # Maximum skip-moulting probability (logit-scale).
+                   xp_mat = c(55, 105),             # Maturation pivot point parameters.
+                   log_window_mat = c(-1.5, -0.1),  # Maturation transition window parameters.
+                   logit_p_mix_mat = 0.1)           # Mixing proportion between early and late maturation (logit-scale).
+                   
+                   
+# Create TMB model object:
+obj <- MakeADFun(data = data, parameters = parameters, DLL = "maturation")
+
+# Plot skip-moulting function:
+plot(data$x, obj$report()$p_skip, type = "l", lwd = 2, col = "blue")
+gbarplot(data$f, data$x, grid = TRUE)
+lines(data$x, obj$report()$f_skip, lwd = 2, col = "red")
+
+# Plot maturation function:
+plot(data$x, obj$report()$p_mat, type = "l", lwd = 2, col = "blue")
+gbarplot(data$f, data$x, grid = TRUE)
+lines(data$x, obj$report()$f_mat, lwd = 2, col = "red")
+
